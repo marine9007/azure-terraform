@@ -1,0 +1,24 @@
+# Copy this file to terraform.tfvars and customize
+
+location            = "eastus"
+resource_group_name = "rg-free-tier"
+environment         = "dev"
+
+# Optional: custom app service name (must be globally unique)
+# app_service_name = "my-unique-app-name"
+
+# Enable/disable static web app
+enable_static_web_app = true
+
+# Tags
+tags = {
+  ManagedBy   = "Terraform"
+  Project     = "FreeTierDemo"
+  CostCenter  = "Development"
+}
+
+# AKS Configuration (ONLY if you have credits - NOT FREE)
+# enable_aks      = true
+# aks_node_count  = 1
+# aks_node_vm_size = "Standard_B2s"
+
