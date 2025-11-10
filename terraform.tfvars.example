@@ -1,7 +1,7 @@
 # Copy this file to terraform.tfvars and customize
 
 location            = "eastus"
-resource_group_name = "rg-free-tier"
+resource_group_name = "rg-free-d1"
 environment         = "dev"
 
 # Optional: custom app service name (must be globally unique)
