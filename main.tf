@@ -5,17 +5,6 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
-locals {
-  suffix = random_string.suffix.result
-  common_tags = merge(
-    var.tags,
-    {
-      Environment = var.environment
-      Location    = var.location
-    }
-  )
-}
-
 # Resource Group
 resource "azurerm_resource_group" "main" {
   name     = var.resource_group_name
@@ -30,7 +19,7 @@ resource "azurerm_storage_account" "main" {
   location                 = azurerm_resource_group.main.location
   account_tier             = var.storage_account_tier
   account_replication_type = var.storage_account_replication
-  
+
   # Enable static website hosting (free)
   static_website {
     index_document = "index.html"
@@ -66,7 +55,7 @@ resource "azurerm_linux_web_app" "main" {
 
   site_config {
     always_on = false # Must be false for Free tier
-    
+
     application_stack {
       node_version = "18-lts"
     }
