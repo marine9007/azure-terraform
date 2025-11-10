@@ -24,21 +24,6 @@ output "storage_static_website_url" {
   value       = azurerm_storage_account.main.primary_web_endpoint
 }
 
-output "app_service_name" {
-  description = "Name of the App Service"
-  value       = azurerm_linux_web_app.main.name
-}
-
-output "app_service_default_hostname" {
-  description = "Default hostname of the App Service"
-  value       = azurerm_linux_web_app.main.default_hostname
-}
-
-output "app_service_url" {
-  description = "URL of the App Service"
-  value       = "https://${azurerm_linux_web_app.main.default_hostname}"
-}
-
 output "static_web_app_default_hostname" {
   description = "Default hostname of the Static Web App"
   value       = var.enable_static_web_app ? azurerm_static_web_app.main[0].default_host_name : null

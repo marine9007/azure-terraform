@@ -14,11 +14,12 @@ resource "azurerm_resource_group" "main" {
 
 # Storage Account (Free tier: 5GB blob storage, 5GB file storage)
 resource "azurerm_storage_account" "main" {
-  name                     = "st${local.suffix}"
-  resource_group_name      = azurerm_resource_group.main.name
-  location                 = azurerm_resource_group.main.location
-  account_tier             = var.storage_account_tier
-  account_replication_type = var.storage_account_replication
+  name                            = "st${local.suffix}"
+  resource_group_name             = azurerm_resource_group.main.name
+  location                        = azurerm_resource_group.main.location
+  account_tier                    = var.storage_account_tier
+  account_replication_type        = var.storage_account_replication
+  allow_nested_items_to_be_public = false
 
   # Enable static website hosting (free)
   static_website {
@@ -33,35 +34,6 @@ resource "azurerm_storage_container" "main" {
   name                  = "content"
   storage_account_name  = azurerm_storage_account.main.name
   container_access_type = "private"
-}
-
-# App Service Plan (F1 Free tier: 1GB disk, 1GB RAM, 60 min/day compute)
-resource "azurerm_service_plan" "main" {
-  name                = "plan-${var.environment}-${local.suffix}"
-  resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
-  os_type             = "Linux"
-  sku_name            = "F1" # Free tier
-
-  tags = local.common_tags
-}
-
-# App Service (Free tier)
-resource "azurerm_linux_web_app" "main" {
-  name                = coalesce(var.app_service_name, "app-${var.environment}-${local.suffix}")
-  resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_service_plan.main.location
-  service_plan_id     = azurerm_service_plan.main.id
-
-  site_config {
-    always_on = false # Must be false for Free tier
-
-    application_stack {
-      node_version = "18-lts"
-    }
-  }
-
-  tags = local.common_tags
 }
 
 # Static Web App (Free tier: 100GB bandwidth/month, custom domain, SSL)
