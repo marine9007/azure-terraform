@@ -4,11 +4,14 @@ This Terraform configuration deploys free-tier Azure services.
 
 ## Free Services Included
 
-- **Resource Group**: Free
+- **Resource Group**: Free container for all resources
 - **Storage Account**: 5GB blob + 5GB file storage free, includes static website hosting
-- **App Service Plan (F1)**: 1GB disk, 1GB RAM, 60 min/day compute - FREE
-- **App Service**: Linux web app on F1 tier - FREE
 - **Static Web App**: 100GB bandwidth/month, custom domain, SSL - FREE
+- **Storage Container**: Private blob container for data storage
+
+## Note on App Service
+
+**App Service (F1) is NOT included** - Pay-as-you-go subscriptions typically block the free F1 tier. If you have Azure for Students or credits, you can uncomment the App Service resources in `main.tf`.
 
 ## AKS Note
 
@@ -20,24 +23,34 @@ This Terraform configuration deploys free-tier Azure services.
 2. [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 3. Azure subscription
 
-## Setup
+## Authentication
 
-1. Login to Azure:
+1. Login to Azure with tenant:
 ```bash
-az login
+az login --tenant YOUR_TENANT_ID
+```
+
+If you get Graph API scope errors, use:
+```bash
+az login --scope https://graph.microsoft.com/.default
 ```
 
 2. Set your subscription (if you have multiple):
 ```bash
-az account set --subscription "your-subscription-name"
+az account set --subscription "your-subscription-id"
 ```
 
-3. Copy the example tfvars:
+3. Verify your authentication:
+```bash
+az account show
+```
+
+4. Copy the example tfvars (if it exists):
 ```bash
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-4. Edit `terraform.tfvars` with your values
+5. Edit `terraform.tfvars` with your values (or use defaults)
 
 ## Usage
 
@@ -58,16 +71,25 @@ terraform destroy
 ## Outputs
 
 After deployment, you'll get:
-- Storage account name and static website URL
-- App Service URL
-- Static Web App URL
-- Connection strings (sensitive)
+- **Resource Group**: Name and ID
+- **Storage Account**: Name and static website URL
+- **Static Web App**: Default hostname and API key
+- **Connection Strings**: Storage connection string (sensitive)
 
 View outputs:
 ```bash
+# All outputs
 terraform output
+
+# JSON format
 terraform output -json
+
+# Specific output
 terraform output storage_static_website_url
+terraform output static_web_app_default_hostname
+
+# Sensitive values
+terraform output static_web_app_api_key
 ```
 
 ## Expanding the Configuration
@@ -92,12 +114,44 @@ modules/
     └── versions.tf
 ```
 
-## Cost Warnings
+## Cost & Limits
 
-Free tier limits:
-- Storage: First 5GB free, then costs apply
-- App Service F1: 60 min/day compute, after that app stops
-- Static Web App: 100GB bandwidth/month, then costs apply
+**Free tier limits:**
+- **Storage Account**: First 5GB blob + 5GB file storage free, then ~$0.018/GB/month
+- **Static Web App**: 100GB bandwidth/month free, then costs apply
+- **Blob Operations**: First 50,000 operations free
 
-Always monitor your Azure costs in the portal!
+**Zero cost if you stay within limits** - but always monitor your Azure costs in the portal!
+
+## Deploying Content
+
+**To Static Web App:**
+```bash
+# Get the deployment token
+terraform output -raw static_web_app_api_key
+
+# Deploy using SWA CLI or GitHub Actions
+npm install -g @azure/static-web-apps-cli
+swa deploy --deployment-token="<token>"
+```
+
+**To Storage Static Website:**
+```bash
+# Get storage account name
+STORAGE_NAME=$(terraform output -raw storage_account_name)
+
+# Upload files
+az storage blob upload-batch \
+  --account-name $STORAGE_NAME \
+  --destination '$web' \
+  --source ./dist
+```
+
+## Troubleshooting
+
+**DNS propagation errors:**
+If you get "no such host" errors right after deployment, wait 2-3 minutes for DNS propagation.
+
+**Quota errors for App Service:**
+Pay-as-you-go subscriptions often block F1 tier. This is expected - use Static Web App or Storage instead.
 
